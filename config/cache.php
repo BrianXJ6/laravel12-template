@@ -3,7 +3,6 @@
 use Illuminate\Support\Str;
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Default Cache Store
@@ -14,8 +13,7 @@ return [
     | specified when running a cache operation inside the application.
     |
     */
-
-    'default' => env('CACHE_STORE', 'database'),
+    'default' => env('CACHE_STORE', 'redis'),
 
     /*
     |--------------------------------------------------------------------------
@@ -30,9 +28,7 @@ return [
     |                    "redis", "dynamodb", "octane", "null"
     |
     */
-
     'stores' => [
-
         'array' => [
             'driver' => 'array',
             'serialize' => false,
@@ -89,7 +85,6 @@ return [
         'octane' => [
             'driver' => 'octane',
         ],
-
     ],
 
     /*
@@ -102,7 +97,5 @@ return [
     | that reason, you may prefix every cache key to avoid collisions.
     |
     */
-
-    'prefix' => env('CACHE_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_cache_'),
-
+    'prefix' => env('CACHE_PREFIX', Str::slug(env('APP_NAME', 'Laravel12 template'), '_') . '_cache_'),
 ];
