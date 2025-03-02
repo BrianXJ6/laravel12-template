@@ -3,6 +3,43 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | Application Protocol
+    |--------------------------------------------------------------------------
+    |
+    | Specifies the protocol used by the application. This can be 'http' for unencrypted
+    | connections or 'https' for encrypted connections. The default value is 'http'.
+    |
+    | Supported drivers: "http", "https"
+    |
+    */
+    'protocol' => env('APP_PROTOCOL', 'http'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Domain
+    |--------------------------------------------------------------------------
+    |
+    | Defines the domain name for the application. This setting determines which domain
+    | will be used to access the application. The default is 'localhost', which is typically
+    | used during development.
+    |
+    */
+    'domain' => env('APP_DOMAIN', 'localhost'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Port
+    |--------------------------------------------------------------------------
+    |
+    | Sets the port on which the application will run. The default value is '80', which is
+    | the standard port for HTTP connections. This can be changed to match the desired
+    | configuration of your server.
+    |
+    */
+    'port' => env('APP_PORT', 80),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Name
     |--------------------------------------------------------------------------
     |
@@ -47,7 +84,7 @@ return [
     | the application so that it's available within Artisan commands.
     |
     */
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => env('APP_URL', 'http://localhost:80'),
 
     /*
     |--------------------------------------------------------------------------
