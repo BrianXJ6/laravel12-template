@@ -1,3 +1,11 @@
+# =========================================================================================================
+# ============================== DO NOT MAKE ANY CHANGES TO THIS FILE =====================================
+# =========================================================================================================
+# Use this docker compose example to run the application in a development environment.
+# You can change the environment variables and the services you want to use as needed.
+# Make a copy of this file and rename it to docker-compose-dev.yml
+# then run the command: docker compose -f docker-compose-dev.yml up -d --build
+
 services:
   laravel12-template:
     build:
@@ -37,6 +45,20 @@ services:
     networks:
       - laravel12-template-network
 
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - ${PHPMYADMIN_PORT:-8888}:80
+    environment:
+      - PMA_HOST=${DB_HOST:-mysql}
+      - PMA_PORT=${DB_PORT:-3306}
+      - PMA_USER=${DB_USERNAME:-root}
+      - PMA_PASSWORD=${DB_PASSWORD:-root}
+    networks:
+      - laravel12-template-network
+    depends_on:
+      - mysql
+
   redis:
     image: redis:alpine
     ports:
@@ -45,6 +67,18 @@ services:
       - laravel12-template-redis-vol:/data
     networks:
       - laravel12-template-network
+
+  redis-cmd:
+    image: rediscommander/redis-commander:latest
+    ports:
+      - ${REDIS_COMMANDER_PORT:-8081}:8081
+    environment:
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+    networks:
+      - laravel12-template-network
+    depends_on:
+      - redis
 
   minio:
     image: minio/minio:latest
@@ -68,6 +102,37 @@ services:
     networks:
       - laravel12-template-network
 
+  soketi:
+    image: quay.io/soketi/soketi:latest-16-alpine
+    environment:
+      SOKETI_METRICS_SERVER_PORT: "9601"
+      SOKETI_DEFAULT_APP_ID: ${PUSHER_APP_ID:-null}
+      SOKETI_DEFAULT_APP_KEY: ${PUSHER_APP_KEY:-null}
+      SOKETI_DEFAULT_APP_SECRET: ${PUSHER_APP_SECRET:-null}
+    ports:
+      - ${PUSHER_PORT:-6001}:6001
+      - ${PUSHER_METRICS_PORT:-9601}:9601
+    networks:
+      - laravel12-template-network
+
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    ports:
+      - ${FORWARD_MEILISEARCH_PORT:-7700}:7700
+    volumes:
+      - laravel12-template-meilisearch-vol:/meili_data
+    networks:
+      - laravel12-template-network
+
+  selenium:
+    image: selenium/standalone-chromium
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - /dev/shm:/dev/shm
+    networks:
+      - laravel12-template-network
+
 networks:
   laravel12-template-network:
     driver: bridge
@@ -78,4 +143,6 @@ volumes:
   laravel12-template-redis-vol:
     driver: local
   laravel12-template-minio-vol:
+    driver: local
+  laravel12-template-meilisearch-vol:
     driver: local
