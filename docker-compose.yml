@@ -1,11 +1,11 @@
 services:
-    laravel-12-example:
+    laravel12-example:
         build:
             context: ./docker
             dockerfile: Dockerfile
             args:
                 WWWGROUP: ${WWWGROUP:-1000}
-        image: laravel-12-example-app
+        image: laravel12-example-app
         extra_hosts:
             - host.docker.internal:host-gateway
         ports:
@@ -22,7 +22,7 @@ services:
         volumes:
             - .:/var/www/html
         networks:
-            - laravel-12-example-network
+            - laravel12-example-network
 
     mysql:
         image: mysql/mysql-server:8.0
@@ -31,16 +31,16 @@ services:
         environment:
             MYSQL_ROOT_PASSWORD: root
             MYSQL_ROOT_HOST: "%"
-            MYSQL_DATABASE: ${DB_DATABASE:-laravel_12_example_db}
-            MYSQL_USER: ${DB_USERNAME:-laravel_12_example}
+            MYSQL_DATABASE: ${DB_DATABASE:-laravel12_example_db}
+            MYSQL_USER: ${DB_USERNAME:-laravel12_example}
             MYSQL_PASSWORD: ${DB_PASSWORD:-root}
         volumes:
-            - laravel-12-example-mysql-vol:/var/lib/mysql
+            - laravel12-example-mysql-vol:/var/lib/mysql
         command: >
             --character-set-server=utf8mb4
             --collation-server=utf8mb4_unicode_ci
         networks:
-            - laravel-12-example-network
+            - laravel12-example-network
 
     phpmyadmin:
         image: phpmyadmin/phpmyadmin:latest
@@ -52,7 +52,7 @@ services:
             - PMA_USER=${DB_USERNAME:-root}
             - PMA_PASSWORD=${DB_PASSWORD:-root}
         networks:
-            - laravel-12-example-network
+            - laravel12-example-network
         depends_on:
             - mysql
 
@@ -61,9 +61,9 @@ services:
         ports:
             - ${REDIS_PORT:-6379}:6379
         volumes:
-            - laravel-12-example-redis-vol:/data
+            - laravel12-example-redis-vol:/data
         networks:
-            - laravel-12-example-network
+            - laravel12-example-network
 
     redis-cmd:
         image: rediscommander/redis-commander:latest
@@ -73,7 +73,7 @@ services:
             - REDIS_HOST=${REDIS_HOST:-redis}
             - REDIS_PORT=${REDIS_PORT:-6379}
         networks:
-            - laravel-12-example-network
+            - laravel12-example-network
         depends_on:
             - redis
 
@@ -83,12 +83,12 @@ services:
             - ${FORWARD_MINIO_PORT:-9000}:9000
             - ${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900
         environment:
-            MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-laravel-12-example}
-            MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-laravel-12-example}
+            MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-laravel12-example}
+            MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-laravel12-example}
         volumes:
-            - laravel-12-example-minio-vol:/data
+            - laravel12-example-minio-vol:/data
         networks:
-            - laravel-12-example-network
+            - laravel12-example-network
         command: 'minio server /data --console-address ":8900"'
 
     mailpit:
@@ -97,7 +97,7 @@ services:
             - ${FORWARD_MAILPIT_PORT:-1025}:1025
             - ${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025
         networks:
-            - laravel-12-example-network
+            - laravel12-example-network
 
     soketi:
         image: quay.io/soketi/soketi:latest-16-alpine
@@ -110,16 +110,16 @@ services:
             - ${PUSHER_PORT:-6001}:6001
             - ${PUSHER_METRICS_PORT:-9601}:9601
         networks:
-            - laravel-12-example-network
+            - laravel12-example-network
 
     meilisearch:
         image: getmeili/meilisearch:latest
         ports:
             - ${FORWARD_MEILISEARCH_PORT:-7700}:7700
         volumes:
-            - laravel-12-example-meilisearch-vol:/meili_data
+            - laravel12-example-meilisearch-vol:/meili_data
         networks:
-            - laravel-12-example-network
+            - laravel12-example-network
 
     selenium:
         image: selenium/standalone-chromium
@@ -128,18 +128,18 @@ services:
         volumes:
             - /dev/shm:/dev/shm
         networks:
-            - laravel-12-example-network
+            - laravel12-example-network
 
 networks:
-    laravel-12-example-network:
+    laravel12-example-network:
         driver: bridge
 
 volumes:
-    laravel-12-example-mysql-vol:
+    laravel12-example-mysql-vol:
         driver: local
-    laravel-12-example-redis-vol:
+    laravel12-example-redis-vol:
         driver: local
-    laravel-12-example-minio-vol:
+    laravel12-example-minio-vol:
         driver: local
-    laravel-12-example-meilisearch-vol:
+    laravel12-example-meilisearch-vol:
         driver: local
