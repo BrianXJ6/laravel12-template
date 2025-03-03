@@ -26,6 +26,15 @@ services:
       - .:/var/www/html
     networks:
       - laravel12-template-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
 
   mysql:
     image: mysql/mysql-server:8.0
@@ -44,6 +53,10 @@ services:
       - laravel12-template-mysql-vol:/var/lib/mysql
     networks:
       - laravel12-template-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
+      retries: 3
+      timeout: 5s
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -67,6 +80,10 @@ services:
       - laravel12-template-redis-vol:/data
     networks:
       - laravel12-template-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      retries: 3
+      timeout: 5s
 
   redis-cmd:
     image: rediscommander/redis-commander:latest
@@ -93,6 +110,10 @@ services:
       - laravel12-template-minio-vol:/data
     networks:
       - laravel12-template-network
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      retries: 3
+      timeout: 5s
 
   mailpit:
     image: axllent/mailpit:latest
@@ -101,6 +122,10 @@ services:
       - ${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025
     networks:
       - laravel12-template-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8025"]
+      retries: 3
+      timeout: 5s
 
   soketi:
     image: quay.io/soketi/soketi:latest-16-alpine
@@ -114,6 +139,10 @@ services:
       - ${PUSHER_METRICS_PORT:-9601}:9601
     networks:
       - laravel12-template-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6001/metrics"]
+      retries: 3
+      timeout: 5s
 
   meilisearch:
     image: getmeili/meilisearch:latest
@@ -123,6 +152,17 @@ services:
       - laravel12-template-meilisearch-vol:/meili_data
     networks:
       - laravel12-template-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--spider",
+          "http://127.0.0.1:7700/health",
+        ]
+      retries: 3
+      timeout: 5s
 
   selenium:
     image: selenium/standalone-chromium
@@ -132,6 +172,10 @@ services:
       - /dev/shm:/dev/shm
     networks:
       - laravel12-template-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/wd/hub/status"]
+      retries: 3
+      timeout: 5s
 
 networks:
   laravel12-template-network:
