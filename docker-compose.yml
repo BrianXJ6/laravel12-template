@@ -1,150 +1,145 @@
 services:
-    laravel.test:
+    laravel-12-example:
         build:
-            context: './vendor/laravel/sail/runtimes/8.4'
+            context: ./docker
             dockerfile: Dockerfile
             args:
-                WWWGROUP: '${WWWGROUP}'
-        image: 'sail-8.4/app'
+                WWWGROUP: ${WWWGROUP:-1000}
+        image: laravel-12-example-app
         extra_hosts:
-            - 'host.docker.internal:host-gateway'
+            - host.docker.internal:host-gateway
         ports:
-            - '${APP_PORT:-80}:80'
-            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+            - ${APP_PORT:-80}:80
+            - ${VITE_PORT:-5173}:${VITE_PORT:-5173}
         environment:
-            WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
-            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
-            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
-            IGNITION_LOCAL_SITES_PATH: '${PWD}'
+            WWWUSER: ${WWWUSER:-1000}
+            MYSQL_HOST: ${DB_HOST:-mysql}
+            TZ: ${APP_TIMEZONE:-America/Recife}
+            XDEBUG_MODE: ${SAIL_XDEBUG_MODE:-develop,debug,coverage}
+            XDEBUG_CONFIG: ${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}
+            IGNITION_LOCAL_SITES_PATH: ${PWD}
         volumes:
-            - '.:/var/www/html'
+            - .:/var/www/html
         networks:
-            - sail
+            - laravel-12-example-network
+
+    mysql:
+        image: mysql/mysql-server:8.0
+        ports:
+            - ${DB_PORT:-3306}:3306
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_ROOT_HOST: "%"
+            MYSQL_DATABASE: ${DB_DATABASE:-laravel_12_example_db}
+            MYSQL_USER: ${DB_USERNAME:-laravel_12_example}
+            MYSQL_PASSWORD: ${DB_PASSWORD:-root}
+        volumes:
+            - laravel-12-example-mysql-vol:/var/lib/mysql
+        command: >
+            --character-set-server=utf8mb4
+            --collation-server=utf8mb4_unicode_ci
+        networks:
+            - laravel-12-example-network
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin:latest
+        ports:
+            - ${PHPMYADMIN_PORT:-8888}:80
+        environment:
+            - PMA_HOST=${DB_HOST:-mysql}
+            - PMA_PORT=${DB_PORT:-3306}
+            - PMA_USER=${DB_USERNAME:-root}
+            - PMA_PASSWORD=${DB_PASSWORD:-root}
+        networks:
+            - laravel-12-example-network
         depends_on:
             - mysql
-            - redis
-            - minio
-            - mailpit
-            - soketi
-            - meilisearch
-            - selenium
-    mysql:
-        image: 'mysql/mysql-server:8.0'
-        ports:
-            - '${FORWARD_DB_PORT:-3306}:3306'
-        environment:
-            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
-            MYSQL_ROOT_HOST: '%'
-            MYSQL_DATABASE: '${DB_DATABASE}'
-            MYSQL_USER: '${DB_USERNAME}'
-            MYSQL_PASSWORD: '${DB_PASSWORD}'
-            MYSQL_ALLOW_EMPTY_PASSWORD: 1
-        volumes:
-            - 'sail-mysql:/var/lib/mysql'
-            - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
-        networks:
-            - sail
-        healthcheck:
-            test:
-                - CMD
-                - mysqladmin
-                - ping
-                - '-p${DB_PASSWORD}'
-            retries: 3
-            timeout: 5s
+
     redis:
-        image: 'redis:alpine'
+        image: redis:alpine
         ports:
-            - '${FORWARD_REDIS_PORT:-6379}:6379'
+            - ${REDIS_PORT:-6379}:6379
         volumes:
-            - 'sail-redis:/data'
+            - laravel-12-example-redis-vol:/data
         networks:
-            - sail
-        healthcheck:
-            test:
-                - CMD
-                - redis-cli
-                - ping
-            retries: 3
-            timeout: 5s
+            - laravel-12-example-network
+
+    redis-cmd:
+        image: rediscommander/redis-commander:latest
+        ports:
+            - ${REDIS_COMMANDER_PORT:-8081}:8081
+        environment:
+            - REDIS_HOST=${REDIS_HOST:-redis}
+            - REDIS_PORT=${REDIS_PORT:-6379}
+        networks:
+            - laravel-12-example-network
+        depends_on:
+            - redis
+
     minio:
-        image: 'minio/minio:latest'
+        image: minio/minio:latest
         ports:
-            - '${FORWARD_MINIO_PORT:-9000}:9000'
-            - '${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900'
+            - ${FORWARD_MINIO_PORT:-9000}:9000
+            - ${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900
         environment:
-            MINIO_ROOT_USER: sail
-            MINIO_ROOT_PASSWORD: password
+            MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-laravel-12-example}
+            MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-laravel-12-example}
         volumes:
-            - 'sail-minio:/data'
+            - laravel-12-example-minio-vol:/data
         networks:
-            - sail
+            - laravel-12-example-network
         command: 'minio server /data --console-address ":8900"'
-        healthcheck:
-            test:
-                - CMD
-                - mc
-                - ready
-                - local
-            retries: 3
-            timeout: 5s
+
     mailpit:
-        image: 'axllent/mailpit:latest'
+        image: axllent/mailpit:latest
         ports:
-            - '${FORWARD_MAILPIT_PORT:-1025}:1025'
-            - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+            - ${FORWARD_MAILPIT_PORT:-1025}:1025
+            - ${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025
         networks:
-            - sail
+            - laravel-12-example-network
+
     soketi:
-        image: 'quay.io/soketi/soketi:latest-16-alpine'
+        image: quay.io/soketi/soketi:latest-16-alpine
         environment:
-            SOKETI_DEBUG: '${SOKETI_DEBUG:-1}'
-            SOKETI_METRICS_SERVER_PORT: '9601'
-            SOKETI_DEFAULT_APP_ID: '${PUSHER_APP_ID}'
-            SOKETI_DEFAULT_APP_KEY: '${PUSHER_APP_KEY}'
-            SOKETI_DEFAULT_APP_SECRET: '${PUSHER_APP_SECRET}'
+            SOKETI_METRICS_SERVER_PORT: "9601"
+            SOKETI_DEFAULT_APP_ID: ${PUSHER_APP_ID:-null}
+            SOKETI_DEFAULT_APP_KEY: ${PUSHER_APP_KEY:-null}
+            SOKETI_DEFAULT_APP_SECRET: ${PUSHER_APP_SECRET:-null}
         ports:
-            - '${PUSHER_PORT:-6001}:6001'
-            - '${PUSHER_METRICS_PORT:-9601}:9601'
+            - ${PUSHER_PORT:-6001}:6001
+            - ${PUSHER_METRICS_PORT:-9601}:9601
         networks:
-            - sail
+            - laravel-12-example-network
+
     meilisearch:
-        image: 'getmeili/meilisearch:latest'
+        image: getmeili/meilisearch:latest
         ports:
-            - '${FORWARD_MEILISEARCH_PORT:-7700}:7700'
-        environment:
-            MEILI_NO_ANALYTICS: '${MEILISEARCH_NO_ANALYTICS:-false}'
+            - ${FORWARD_MEILISEARCH_PORT:-7700}:7700
         volumes:
-            - 'sail-meilisearch:/meili_data'
+            - laravel-12-example-meilisearch-vol:/meili_data
         networks:
-            - sail
-        healthcheck:
-            test:
-                - CMD
-                - wget
-                - '--no-verbose'
-                - '--spider'
-                - 'http://127.0.0.1:7700/health'
-            retries: 3
-            timeout: 5s
+            - laravel-12-example-network
+
     selenium:
         image: selenium/standalone-chromium
         extra_hosts:
-            - 'host.docker.internal:host-gateway'
+            - host.docker.internal:host-gateway
         volumes:
-            - '/dev/shm:/dev/shm'
+            - /dev/shm:/dev/shm
         networks:
-            - sail
+            - laravel-12-example-network
+
 networks:
-    sail:
+    laravel-12-example-network:
         driver: bridge
+
 volumes:
-    sail-mysql:
+    laravel-12-example-mysql-vol:
         driver: local
-    sail-redis:
+    laravel-12-example-redis-vol:
         driver: local
-    sail-minio:
+    laravel-12-example-minio-vol:
         driver: local
-    sail-meilisearch:
+    laravel-12-example-meilisearch-vol:
         driver: local
