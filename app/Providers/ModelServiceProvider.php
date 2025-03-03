@@ -2,28 +2,28 @@
 
 namespace App\Providers;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Http\Resources\Json\JsonResource;
 
-class AppServiceProvider extends ServiceProvider
+class ModelServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
+     * Register services.
      *
      * @return void
      */
     public function register(): void
     {
-        //
+        // ...
     }
 
     /**
-     * Bootstrap any application services.
+     * Bootstrap services.
      *
      * @return void
      */
     public function boot(): void
     {
-        JsonResource::withoutWrapping();
+        Model::shouldBeStrict();
     }
 }
