@@ -46,7 +46,7 @@ services:
     networks:
       - laravel12-template-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD:-root}"]
       retries: 3
       timeout: 5s
 
