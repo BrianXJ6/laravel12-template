@@ -48,7 +48,7 @@ return [
     | other UI elements where an application name needs to be displayed.
     |
     */
-    'name' => env('APP_NAME', 'laravel12 Example'),
+    'name' => env('APP_NAME', 'Laravel12 Template'),
 
     /*
     |--------------------------------------------------------------------------
@@ -96,7 +96,7 @@ return [
     | is set to "UTC" by default as it is suitable for most use cases.
     |
     */
-    'timezone' => 'America/Recife',
+    'timezone' => env('APP_TZ', 'America/Recife'),
 
     /*
     |--------------------------------------------------------------------------
