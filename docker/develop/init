@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+TIMEOUT=30
+
+# Function to handle the Composer execution process
+composer_install() {
+    if [ "$1" == "timeout" ]; then
+        timeout $TIMEOUT gosu 1000 composer install
+    else
+        gosu 1000 composer install
+    fi
+
+    if [ $? -eq 0 ]; then
+        echo ">>>>>>>>>> Packages via Composer installed successfully!!!"
+    else
+        composer_install
+    fi
+    return $?
+}
+
+# Function to handle the NPM execution process
+npm_install() {
+    if [ "$1" == "timeout" ]; then
+        timeout $TIMEOUT gosu 1000 npm i &
+        BUILD_PID=$!
+    else
+        gosu 1000 npm i &
+        BUILD_PID=$!
+    fi
+
+    while kill -0 $BUILD_PID 2>/dev/null; do
+        echo "NPM is running, this process may take a while, please wait..."
+        sleep 10
+    done
+    wait $BUILD_PID
+
+    if [ $? -eq 0 ]; then
+        echo ">>>>>>>>>> Packages via NPM installed successfully!!!"
+    else
+        npm_install
+    fi
+    return $?
+}
+
+# Function to handle the BUILD of application process
+build_app() {
+    if [ "$1" == "timeout" ]; then
+        timeout $TIMEOUT gosu 1000 npm run build
+    else
+        gosu 1000 npm run build
+    fi
+
+    if [ $? -eq 0 ]; then
+        echo ">>>>>>>>>> Application build successfully!!!"
+    else
+        build_app
+    fi
+    return $?
+}
+
+# Preparing the application...
+gosu 1000 git config --global --add safe.directory /var/www/html
+
+if [ ! -d /var/www/html/vendor ]; then
+    echo ">>>>>>>>>> Executing COMPOSER to download packages:"
+    composer_install "timeout"
+fi
+
+if [ ! -f /var/www/html/.env ]; then
+    echo ">>>>>>>>>> Executing COPY of .env.example file and generate app key:"
+    gosu 1000 cp /var/www/html/.env.example /var/www/html/.env
+    gosu 1000 php artisan key:generate
+fi
+
+if [ ! -d /var/www/html/node_modules ]; then
+    echo ">>>>>>>>>> Executing NPM to download packages:"
+    npm_install "timeout"
+fi
+
+if [ ! -d /var/www/html/public/build ]; then
+    echo ">>>>>>>>>> Executing the initial build of the application:"
+    build_app "timeout"
+fi
+
+# Preparing database...
+echo ">>>>>>>>>> Preparing database:"
+until mysqladmin ping --host=$MYSQL_HOST --silent; do
+    echo "MySQL is unavailable, please wait..."
+    sleep 3
+done
+echo ">>>>>>>>>> Great, the MySQL service is ready!!! ;D"
+
+# Running migrations if necessary...
+gosu 1000 php artisan migrate:status | grep -q 'ERROR'
+if [ $? -eq 0 ]; then
+    echo ">>>>>>>>>> Running migrations and populating databases:"
+    gosu 1000 php artisan migrate --seed
+fi
+
+exec echo ">>>>>>>>>> Initialization process completed successfully!!!"

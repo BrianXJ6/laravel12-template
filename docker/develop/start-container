@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+if [ ! -d /.composer ]; then
+    mkdir /.composer
+fi
+usermod -u 1000 sail
+chmod -R ugo+rw /.composer
+
+/usr/local/bin/init
+
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
