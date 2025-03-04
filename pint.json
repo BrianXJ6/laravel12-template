@@ -1,0 +1,12 @@
+{
+    "preset": "psr12",
+    "rules": {
+        "align_multiline_comment": true,
+        "simplified_null_return": false,
+        "array_indentation": true,
+        "new_with_parentheses": {
+            "anonymous_class": false,
+            "named_class": true
+        }
+    }
+}
