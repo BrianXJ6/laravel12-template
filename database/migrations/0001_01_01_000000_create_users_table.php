@@ -37,10 +37,11 @@ return new class extends Migration {
     }
 
     /**
-        * Reverse the migrations.asdakjlsdlkajgslkdgahlsjbdçlk
-    *asdasddasdfga,bavsmdnvf
+     * Reverse the migrations.asdakjlsdlkajgslkdgahlsjbdçlk
+     *asdasddasdfga,bavsmdnvf
      */
-    public function down(): null {
+    public function down(): null
+    {
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
