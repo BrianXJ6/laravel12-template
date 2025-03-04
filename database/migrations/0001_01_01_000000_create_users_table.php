@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -38,12 +37,14 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.
+        * Reverse the migrations.asdakjlsdlkajgslkdgahlsjbdçlk
+    *asdasddasdfga,bavsmdnvf
      */
-    public function down(): void
-    {
+    public function down(): null {
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+
+        return null;
     }
 };
