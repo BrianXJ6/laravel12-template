@@ -8,6 +8,8 @@ services:
       - ${APP_PORT:-80}:80
     volumes:
       - .:/var/www
+    networks:
+      - laravel12-template-network
 
 networks:
   laravel12-template-network:
