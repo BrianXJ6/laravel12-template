@@ -1,0 +1,88 @@
+#!/bin/sh
+TIMEOUT=30
+
+# Function to handle the Composer execution process
+composer_install() {
+    if [ "$1" = "timeout" ]; then
+        timeout $TIMEOUT composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --no-dev --optimize-autoloader
+    else
+        composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --no-dev --optimize-autoloader
+    fi
+
+    if [ $? -eq 0 ]; then
+        echo ">>>>>>>>>> Packages via Composer installed successfully!!!"
+    else
+        composer_install
+    fi
+    return $?
+}
+
+# Function to handle the NPM execution process
+npm_install() {
+    if [ "$1" = "timeout" ]; then
+        timeout $TIMEOUT npm i &
+        BUILD_PID=$!
+    else
+        npm i &
+        BUILD_PID=$!
+    fi
+
+    while kill -0 $BUILD_PID 2>/dev/null; do
+        echo "NPM is running, this process may take a while, please wait..."
+        sleep 10
+    done
+    wait $BUILD_PID
+
+    if [ $? -eq 0 ]; then
+        echo ">>>>>>>>>> Packages via NPM installed successfully!!!"
+    else
+        npm_install
+    fi
+    return $?
+}
+
+# Function to handle the BUILD of application process
+build_app() {
+    if [ "$1" = "timeout" ]; then
+        timeout $TIMEOUT npm run build
+    else
+        npm run build
+    fi
+
+    if [ $? -eq 0 ]; then
+        echo ">>>>>>>>>> Application build successfully!!!"
+    else
+        build_app
+    fi
+    return $?
+}
+
+# Preparing the application...
+if [ ! -d /var/www/vendor ]; then
+    echo ">>>>>>>>>> Executing COMPOSER to download packages:"
+    composer_install "timeout"
+fi
+
+if [ ! -f /var/www/.env ]; then
+    echo ">>>>>>>>>> Executing COPY of .env.example file and generate app key:"
+    cp /var/www/.env.example /var/www/.env
+    php artisan key:generate
+fi
+
+if [ ! -d /var/www/node_modules ]; then
+    echo ">>>>>>>>>> Executing NPM to download packages:"
+    npm_install "timeout"
+fi
+
+if [ ! -d /var/www/public/build ]; then
+    echo ">>>>>>>>>> Executing the initial build of the application:"
+    build_app "timeout"
+fi
+
+chown -Rf www-data:www-data /var/www
+chmod -Rf 755 /var/www/storage
+chmod 644 /etc/nginx/nginx.conf
+service nginx restart
+
+echo ">>>>>>>>>> Initialization process completed successfully!!!"
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
