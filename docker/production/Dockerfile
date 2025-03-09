@@ -42,7 +42,6 @@ RUN apt-get purge -y --auto-remove libpng-dev gnupg curl \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Copiando arquivos de configurações e inicialização do projeto
-COPY . /var/www
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY start-container /usr/local/bin/start-container
 COPY php.ini /usr/local/etc/php/conf.d/99-custom.ini
