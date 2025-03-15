@@ -1,0 +1,36 @@
+#!/bin/sh
+
+SCRIPT_DIR=$(dirname "$(realpath "$0")") # Dynamically determine the directory where the build file is located
+SOURCE="$SCRIPT_DIR/../../"              # Define path to the root
+DESTINATION="$SCRIPT_DIR/app"            # Define destination for the copied files
+
+# Execute rsync with excludes and includes flags
+rsync -avq \
+    --exclude='.git' \
+    --exclude='**/*.log' \
+    --include='bootstrap/cache/.gitignore' \
+    --exclude='bootstrap/cache/**' \
+    --exclude='docker' \
+    --exclude='node_modules' \
+    --exclude='public/build' \
+    --include='storage/logs/.gitignore' \
+    --exclude='storage/logs/**' \
+    --include='storage/framework/cache/.gitignore' \
+    --include='storage/framework/cache/data' \
+    --include='storage/framework/cache/data/.gitignore' \
+    --exclude='storage/framework/cache/**' \
+    --include='storage/framework/sessions/.gitignore' \
+    --exclude='storage/framework/sessions/**' \
+    --include='storage/framework/testing/.gitignore' \
+    --exclude='storage/framework/testing/**' \
+    --include='storage/framework/views/.gitignore' \
+    --exclude='storage/framework/views/**' \
+    --include='storage/logs/.gitignore' \
+    --exclude='storage/logs/**' \
+    --exclude='vendor' \
+    --exclude='.env*' \
+    --exclude='composer.lock' \
+    --exclude='docker*' \
+    --exclude='package-lock.json' \
+    --exclude='README.md' \
+    "$SOURCE" "$DESTINATION"
