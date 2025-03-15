@@ -1,47 +1,59 @@
-FROM php:8.4-fpm-bookworm
+FROM php:8.4-fpm-alpine
 
 WORKDIR /var/www
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=America/Recife
+ENV TZ=America/Sao_Paulo
 
-# Configuração do timezone
-RUN apt-get update -y && apt-get upgrade -y && apt-get install -y --no-install-recommends tzdata && \
-    echo $TZ > /etc/timezone && \
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
-    dpkg-reconfigure --frontend noninteractive tzdata && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Installing essential packages
+RUN apk update && apk upgrade && apk add --no-cache zlib libpng libzip imagemagick ffmpeg \
+    librsvg libwebp libxpm libjpeg-turbo tzdata nginx supervisor vim nodejs npm zip unzip
 
-# Instalação de pacotes essenciais
-RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    gnupg curl ca-certificates zip unzip supervisor libpng-dev librsvg2-bin ffmpeg \
-    imagemagick libmagickwand-dev libcurl4-openssl-dev libzip-dev nginx \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Configuring Timezone
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
 
-# Instalando e habilitando extensões do PHP
-RUN pecl install imagick redis \
-    && docker-php-ext-install gd zip pdo_mysql \
-    && docker-php-ext-enable imagick redis \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Installation of tools and temporary packages just for build
+RUN apk add --no-cache --virtual .temp-deps $PHPIZE_DEPS zlib-dev libpng-dev libzip-dev \
+    imagemagick-dev ffmpeg-dev librsvg-dev libwebp-dev libxpm-dev libjpeg-turbo-dev
 
-# Instalação do Composer
+# ==================================================================================================
+# ATTENTION: This script should be removed after a new version of imagick is released with the fixes
+# for PHP 8.4 regarding the `php_strtolower` function. =============================================
+# ==================================================================================================
+RUN pecl download imagick-3.7.0 \
+    && tar -xzf imagick-*.tgz \
+    && cd imagick-* \
+    && phpize \
+    && ./configure CPPFLAGS='-Dphp_strtolower=zend_str_tolower' \
+    && make -j$(nproc) \
+    && make install \
+    && cd .. \
+    && rm -rf imagick-*
+# ==================================================================================================
+# End of temporary script. =========================================================================
+# ==================================================================================================
+
+# Installing and enabling PHP extensions
+RUN pecl install redis && \
+    docker-php-ext-configure gd --with-jpeg --with-webp --with-xpm && \
+    docker-php-ext-install gd zip pdo_mysql && \
+    docker-php-ext-enable redis imagick
+
+# Copying and using php.ini optimized for production
+RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
+# Installing Composer
 RUN curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
 
-# Instalação do Nodejs e NPM
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get update -y && apt-get install -y --no-install-recommends nodejs && npm install -g npm \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Cleaning up the image
+RUN apk del .temp-deps
 
-# LIMPEZA
-RUN apt-get purge -y --auto-remove libpng-dev gnupg curl \
-    libmagickwand-dev libcurl4-openssl-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Creating directory for supervisor logs
+RUN mkdir -p /var/log/supervisor
 
-# Copiando arquivos de configurações e inicialização do projeto
+# Section for copying extra configuration files and directories
+RUN rm -rf ./*
+COPY ./app /var/www/
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY start-container /usr/local/bin/start-container
 COPY php.ini /usr/local/etc/php/conf.d/99-custom.ini
