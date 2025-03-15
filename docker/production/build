@@ -3,6 +3,13 @@
 SCRIPT_DIR=$(dirname "$(realpath "$0")") # Dynamically determine the directory where the build file is located
 SOURCE="$SCRIPT_DIR/../../"              # Define path to the root
 DESTINATION="$SCRIPT_DIR/app"            # Define destination for the copied files
+IMAGE_PATH="$SCRIPT_DIR/images"          # Directory where the images will be exported after build
+PROJECT_NAME="laravel12-template"        # Project name to be used for the image tag
+PROJECT_VERSION="v1"                     # Build version
+
+# Create paths for the build flow
+mkdir -p "$DESTINATION"
+mkdir -p "$IMAGE_PATH"
 
 # Execute rsync with excludes and includes flags
 rsync -avq \
@@ -28,9 +35,22 @@ rsync -avq \
     --include='storage/logs/.gitignore' \
     --exclude='storage/logs/**' \
     --exclude='vendor' \
+    --include='.env.example' \
     --exclude='.env*' \
     --exclude='composer.lock' \
     --exclude='docker*' \
     --exclude='package-lock.json' \
     --exclude='README.md' \
     "$SOURCE" "$DESTINATION"
+
+# Starting the image build
+docker build -f "$SCRIPT_DIR/Dockerfile" -t "$PROJECT_NAME:$PROJECT_VERSION" --rm --no-cache "$SCRIPT_DIR"
+
+# Export the image to a .tar file
+docker save -o "$IMAGE_PATH/$PROJECT_NAME-$PROJECT_VERSION.tar" "$PROJECT_NAME:$PROJECT_VERSION"
+
+# Removing folder after build is finished
+rm -rf "$DESTINATION"
+
+# Finalization
+exec echo "Image successfully exported to directory $IMAGE_PATH"
