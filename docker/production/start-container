@@ -82,7 +82,7 @@ fi
 chown -Rf www-data:www-data /var/www
 chmod -Rf 755 /var/www/storage
 chmod 644 /etc/nginx/nginx.conf
-service nginx restart
+nginx -s reload
 
 echo ">>>>>>>>>> Initialization process completed successfully!!!"
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
