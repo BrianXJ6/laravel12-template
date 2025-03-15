@@ -4,9 +4,9 @@ TIMEOUT=30
 # Function to handle the Composer execution process
 composer_install() {
     if [ "$1" = "timeout" ]; then
-        timeout $TIMEOUT composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --no-dev --optimize-autoloader
+        timeout $TIMEOUT composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --no-dev --optimize-autoloader
     else
-        composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --no-dev --optimize-autoloader
+        composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --no-dev --optimize-autoloader
     fi
 
     if [ $? -eq 0 ]; then
@@ -82,7 +82,6 @@ fi
 chown -Rf www-data:www-data /var/www
 chmod -Rf 755 /var/www/storage
 chmod 644 /etc/nginx/nginx.conf
-nginx -s reload
 
 echo ">>>>>>>>>> Initialization process completed successfully!!!"
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
