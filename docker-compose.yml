@@ -9,11 +9,14 @@ services:
     ports:
       - ${APP_PORT:-80}:80
       - ${VITE_PORT:-5173}:${VITE_PORT:-5173}
+      - ${XDEBUG_PORT:-9003}:${XDEBUG_PORT:-9003}
     environment:
       WWWUSER: 1000
       WWWGROUP: 1000
       TZ: ${APP_TZ:-America/Recife}
-      MYSQL_HOST: ${DB_HOST:-mysql}
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_USER: ${DB_USERNAME:-laravel12_template}
+      DB_PASSWORD: ${DB_PASSWORD:-root}
       XDEBUG_MODE: ${SAIL_XDEBUG_MODE:-develop,debug,coverage}
       XDEBUG_CONFIG: ${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}
       IGNITION_LOCAL_SITES_PATH: ${PWD}
