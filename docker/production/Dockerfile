@@ -3,7 +3,7 @@ FROM php:8.4-fpm-alpine
 WORKDIR /var/www
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=America/Sao_Paulo
+ENV TZ=America/Recife
 
 # Installing essential packages
 RUN apk update && apk upgrade && apk add --no-cache zlib libpng libzip imagemagick ffmpeg \
@@ -45,21 +45,22 @@ RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 # Installing Composer
 RUN curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
 
-# Cleaning up the image
-RUN apk del .temp-deps
-
-# Creating directory for supervisor logs
-RUN mkdir -p /var/log/supervisor
-
 # Section for copying extra configuration files and directories
 RUN rm -rf ./*
 COPY ./app /var/www/
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY start-container /usr/local/bin/start-container
 COPY php.ini /usr/local/etc/php/conf.d/99-custom.ini
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-RUN chmod +x /usr/local/bin/start-container
+
+# Fine adjustments for proper functioning in a development environment
+RUN mkdir -p /var/log/supervisor && \
+    chown -R www-data:www-data /var/www && \
+    chmod -R 755 /var/www/storage && \
+    chmod 644 /etc/nginx/nginx.conf
+
+# Cleaning up the image
+RUN apk del .temp-deps
 
 EXPOSE 80
 
-ENTRYPOINT ["start-container"]
+ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
