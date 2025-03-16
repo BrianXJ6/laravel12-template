@@ -21,9 +21,8 @@ RUN git config --global --add safe.directory /var/www
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
 
 # Installation of tools and temporary packages just for build
-RUN apk add --virtual .temp-deps $PHPIZE_DEPS zlib-dev libpng-dev libzip-dev \
-    imagemagick-dev ffmpeg-dev librsvg-dev libwebp-dev libxpm-dev libjpeg-turbo-dev \
-    mariadb-connector-c-dev
+RUN apk add --virtual .temp-deps $PHPIZE_DEPS zlib-dev libpng-dev libzip-dev mariadb-connector-c-dev \
+    imagemagick-dev ffmpeg-dev librsvg-dev libwebp-dev libxpm-dev libjpeg-turbo-dev
 
 # ==================================================================================================
 # ATTENTION: This script should be removed after a new version of imagick is released with the fixes
@@ -71,7 +70,7 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN chmod +x /usr/local/bin/start-container
 
 # Cleaning up the image
-# RUN apk del .temp-deps
+RUN apk del .temp-deps
 
 EXPOSE 80
 
