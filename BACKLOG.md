@@ -1,5 +1,7 @@
 # BACKLOG
 
+- Laravel Auditing - (<https://laravel-auditing.com>)
+- Log Viewer para Laravel - <https://www.youtube.com/watch?v=ywJcNhCzk5k> | <https://github.com/opcodesio/log-viewer>
 - Implantar o Horizon
 - Implantar o Telescope
 - Implantar o Sentry
