@@ -25,5 +25,6 @@ class ModelServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Model::shouldBeStrict();
+        Model::automaticallyEagerLoadRelationships();
     }
 }
